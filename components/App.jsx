@@ -259,6 +259,33 @@ ${settings.signature ? `<img src="${settings.signature}" class="sig-img" alt="Si
     }
   };
 
+  const loadInvoiceForEdit = (invoice) => {
+    const normalizedItems = (invoice.items && invoice.items.length ? invoice.items : [{ id: 1, desc: '', hsn: '', qty: 1, unit: 'pcs', rate: 0, gst: 18 }])
+      .map((item, idx) => ({
+        id: item.id || idx + 1,
+        desc: item.desc || '',
+        hsn: item.hsn || '',
+        qty: Number(item.qty) || 0,
+        unit: item.unit || 'pcs',
+        rate: Number(item.rate) || 0,
+        gst: Number(item.gst) || settings.gstRate || 18,
+      }));
+
+    setForm({
+      invoiceNo: invoice.invoiceNo || '',
+      date: invoice.date || new Date().toISOString().split('T')[0],
+      customer: invoice.customer || '',
+      address: invoice.address || '',
+      city: invoice.city || '',
+      state: invoice.state || '',
+      gstin: invoice.gstin || '',
+      items: normalizedItems,
+      supplyType: invoice.supplyType || 'intra-state',
+    });
+    setPreview(false);
+    setPage('invoice');
+  };
+
   const totals = getTotals();
   const bg = settings.theme === 'dark' ? 'bg-gray-900 text-white' : 'bg-gray-50 text-gray-900';
   const card = settings.theme === 'dark' ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200';
@@ -364,7 +391,37 @@ ${settings.signature ? `<img src="${settings.signature}" class="sig-img" alt="Si
             {invoices.length === 0 ? (
               <div className="text-center py-12"><div className="text-5xl mb-4">📄</div><p>No invoices</p></div>
             ) : (
-              <table className="w-full"><thead className="bg-gray-200"><tr><th className="p-3 text-left">Invoice</th><th className="p-3 text-left">Date</th><th className="p-3 text-left">Customer</th><th className="p-3 text-right">Total</th></tr></thead><tbody>{invoices.map((inv, i) => <tr key={i}><td className="p-3 font-semibold text-blue-600">{inv.invoiceNo}</td><td className="p-3">{new Date(inv.date).toLocaleDateString('en-IN')}</td><td className="p-3">{inv.customer}</td><td className="p-3 text-right font-semibold">₹{inv.totals.total.toLocaleString('en-IN')}</td></tr>)}</tbody></table>
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead className="bg-gray-200">
+                    <tr>
+                      <th className="p-3 text-left">Invoice</th>
+                      <th className="p-3 text-left">Date</th>
+                      <th className="p-3 text-left">Customer</th>
+                      <th className="p-3 text-right">Total</th>
+                      <th className="p-3 text-center">Action</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {invoices.map((inv, i) => (
+                      <tr key={i}>
+                        <td className="p-3 font-semibold text-blue-600">{inv.invoiceNo}</td>
+                        <td className="p-3">{new Date(inv.date).toLocaleDateString('en-IN')}</td>
+                        <td className="p-3">{inv.customer}</td>
+                        <td className="p-3 text-right font-semibold">₹{inv.totals.total.toLocaleString('en-IN')}</td>
+                        <td className="p-3 text-center">
+                          <button
+                            onClick={() => loadInvoiceForEdit(inv)}
+                            className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+                          >
+                            Edit
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             )}
           </div>
         </div>
